@@ -23,27 +23,15 @@ module Solver
     end
 
     def self.solve2(input)
-        ox = Solver.solveOx(input).strip.to_i(2)
-        co2 = Solver.solveCO2(input).strip.to_i(2)
+        ox = Solver.findDigit(input, true).strip.to_i(2)
+        co2 = Solver.findDigit(input, false).strip.to_i(2)
         return ox * co2
     end
 
-    def self.solveOx(input)
+    def self.findDigit(input, keepMost)
         digit = 0
         while true
-            input = Solver.recurse(input, digit, true)
-            digit += 1
-            if input.length == 1 
-                break
-            end
-        end
-        return input[0]
-    end
-
-    def self.solveCO2(input)
-        digit = 0
-        while true
-            input = Solver.recurse(input, digit, false)
+            input = Solver.recurse(input, digit, keepMost)
             digit += 1
             if input.length == 1 
                 break
@@ -55,7 +43,6 @@ module Solver
     def self.recurse(input, digitPosition, keepMost)
         oneArray = Array.new()
         zeroArray = Array.new()
-        count = 0
         input.each do |line|
             digits = line.split("")
             digit = line[digitPosition]
@@ -64,24 +51,16 @@ module Solver
             end
             case digit
             when "0"
-                count -= 1
                 zeroArray.append(line)
             when "1"
-                count += 1
                 oneArray.append(line)
             end
         end
         if keepMost
-            if count < 0 
-                return zeroArray
-            end
-            return oneArray
+            return oneArray.length < zeroArray.length ? zeroArray : oneArray
         end
 
-        if count < 0
-            return oneArray
-        end
-        return zeroArray
+        return oneArray.length < zeroArray.length ? oneArray : zeroArray
     end
 end
 
