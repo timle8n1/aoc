@@ -2,21 +2,15 @@
 
 module Solver
     def self.solve1(input)
-        sum = 0
-        input.each do |line|
-            common = line.chomp.chars.each_slice(line.size / 2).map(&:to_a).reduce(&:&)[0]
-            sum += Solver.priority(common)
-        end
-        return sum
+        return input.map { |line| 
+            line.chomp.chars.each_slice(line.size / 2).map(&:to_a).reduce(&:&)[0]
+        }.reduce(0) { |sum, n| sum + Solver.priority(n)}
     end
 
     def self.solve2(input)
-        sum = 0
-        input.each_slice(3) do |lines|
-            common = lines.map { |line| line.chomp.chars.to_a }.reduce(&:&)[0]
-            sum += Solver.priority(common)
-        end
-        return sum
+        return input.each_slice(3).map { |lines| 
+            lines.map { |line| line.chomp.chars.to_a }.reduce(&:&)[0]
+        }.reduce(0) { |sum, n| sum + Solver.priority(n)}
     end
 
     def self.priority(input)
