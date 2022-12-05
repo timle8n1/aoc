@@ -1,49 +1,27 @@
 #! /usr/bin/env ruby
 
 module Solver
-    def self.solve1(input)
-        stacks = make_stacks(input)
-        input.each do |line|
-            if !line.start_with?("move")
-                next
-            end
-            lineArray = line.chomp.split(" ")
-            count = lineArray[1].to_i
-            from = lineArray[3].to_i - 1
-            to = lineArray[5].to_i - 1
-            
-            for i in 1..count 
-                crate = stacks[from].shift
-                stacks[to].unshift(crate)
+    def self.solve1(instructions, stacks)
+        instructions.each do |line|
+            count, from, to = parse_step(line)
+            count.times do
+                stacks[to - 1].unshift(stacks[from - 1].shift)
             end
         end
         stacks.map(&:first).join("")
     end
 
-    def self.solve2(input)
-        stacks = make_stacks(input)
-        input.each do |line|
-            if !line.start_with?("move")
-                next
-            end
-            lineArray = line.chomp.split(" ")
-            count = lineArray[1].to_i
-            from = lineArray[3].to_i - 1
-            to = lineArray[5].to_i - 1
-            
-            crates = stacks[from].shift(count)
-            stacks[to].unshift(*crates)
+    def self.solve2(instructions, stacks)
+        instructions.each do |line|
+            count, from, to = parse_step(line)
+            stacks[to - 1].unshift(*(stacks[from - 1].shift(count)))
         end
         stacks.map(&:first).join("")
     end
 
-    def self.make_stacks(input)
-        stackCount = input[0].length / 4
-        stacks = Array.new(stackCount) { Array.new() }
-        input.each do |line|
-            if line.start_with?(" 1")
-                break
-            end
+    def self.make_stacks(stack_map)
+        stacks = Array.new(stack_map[0].length / 4) { Array.new() }
+        stack_map.each do |line|
             line.chars.each_slice(4).with_index do |column, index|
                 crate = column[1]
                 if crate == " "
@@ -54,8 +32,14 @@ module Solver
         end
         return stacks
     end
+
+    def self.parse_step(line) 
+        line.chomp.split(" ").select.with_index { |e, i| i % 2 == 1}.map(&:to_i)
+    end
 end
 
 input = File.readlines(ARGV[0])
-puts Solver.solve1(input)
-puts Solver.solve2(input)
+stack_map = input.select { |line| line.match?(/\A\s*\[/) }
+instructions = input.select { |line| line.start_with?("move") }
+puts Solver.solve1(instructions, Solver.make_stacks(stack_map))
+puts Solver.solve2(instructions, Solver.make_stacks(stack_map))
