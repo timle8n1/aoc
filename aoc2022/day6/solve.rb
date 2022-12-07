@@ -1,23 +1,14 @@
 #! /usr/bin/env ruby
+require 'set'
 
 module Solver
     def self.solve(c, marker_length)
-        for i in marker_length..(c.length - 1) do
-            match = true
-            for j in 0..marker_length-1 do
-                for k in j+1..marker_length-1 do
-                    if c[i-j] == c[i-k]
-                        match = false
-                        break
-                    end
-                    if !match 
-                        break
-                    end
-                end
-            end
-            if match
-                return i + 1
-            end
+        window = c[0, marker_length]
+
+        for i in marker_length..c.length - 1
+            return i if Set.new(window).length == marker_length
+            window.shift
+            window.append(c[i])
         end
     end
 end
