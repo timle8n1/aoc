@@ -22,6 +22,23 @@ class Dir
         end
         return 0
     end
+
+    def pretty_print(prefix)
+        result = "#{prefix}- #{name} (dir)"
+        @files.sort_by {|f| f.name}.each do |f|
+            result += "\n"
+            result += "#{prefix}\t- #{f.name} (file, size=#{f.size})"
+        end
+        @sub_dirs.sort_by {|d| d.name}.each do |d|
+            result += "\n"
+            result += d.pretty_print(prefix + "\t")
+        end
+        return result
+    end
+
+    def to_s
+        pretty_print("")
+    end
 end
 
 class File 
@@ -53,6 +70,7 @@ module Solver
                     end
                 end
             else
+                next if line.start_with?("dir")
                 size, file_name = line.split(" ")
                 file = File.new(file_name, size.to_i)
                 current_dir.files.append(file)
@@ -77,5 +95,6 @@ end
 
 input = File.readlines(ARGV[0])
 dirs = Solver.parse_input(input)
+puts dirs[0]
 puts Solver.solve1(dirs)
 puts Solver.solve2(dirs)
