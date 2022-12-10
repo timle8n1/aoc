@@ -55,21 +55,19 @@ class Computer
     def run(program)
         program.each do |instruction|
             if instruction == "noop"
-                tick(crt, cpu, 1)
+                tick
             else 
                 _, value = instruction.split(" ")
-                tick(crt, cpu, 2)
+                2.times { tick }
                 cpu.addx(value.to_i)
             end
         end
     end
 
-    def tick(crt, cpu, ticks)
-        ticks.times do 
-            crt.draw_pixel(cpu)
-            cpu.check_signal
-            cpu.tick
-        end
+    def tick
+        crt.draw_pixel(cpu)
+        cpu.check_signal
+        cpu.tick
     end
 
     def solve_signal
