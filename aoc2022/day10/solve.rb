@@ -21,8 +21,8 @@ class CPU
     end
 
     def check_signal
-        if CYCLES_OF_NOTE.include?(self.cycle)
-            self.signals.append(self.x * self.cycle)
+        if CYCLES_OF_NOTE.include?(cycle)
+            signals.append(x * cycle)
         end
     end
 end
@@ -40,36 +40,49 @@ class CRT
         screen_offset = cpu.cycle - 1
         cursor = screen_offset - (SCREEN_WIDTH * (screen_offset / SCREEN_WIDTH))
         pixel = (cursor - cpu.x).abs < 2 ? "#" : "."
-        self.screen.append(pixel)
+        screen.append(pixel)
     end
 end
 
-module Solver
-    def self.solve(input, cpu, crt)
-        input.each do |line|
-            if line == "noop"
-                self.tick(crt, cpu, 1)
+class Computer
+    attr_accessor :cpu, :crt
+
+    def initialize
+        @cpu = CPU.new
+        @crt = CRT.new
+    end
+
+    def run(program)
+        program.each do |instruction|
+            if instruction == "noop"
+                tick(crt, cpu, 1)
             else 
-                _, value = line.split(" ")
-                self.tick(crt, cpu, 2)
+                _, value = instruction.split(" ")
+                tick(crt, cpu, 2)
                 cpu.addx(value.to_i)
             end
         end
-        crt
     end
 
-    def self.tick(crt, cpu, ticks)
+    def tick(crt, cpu, ticks)
         ticks.times do 
             crt.draw_pixel(cpu)
             cpu.check_signal
             cpu.tick
         end
     end
+
+    def solve_signal
+        cpu.signals.reduce(:+)
+    end
+
+    def display
+        crt.screen.each_slice(40).to_a.map(&:join)
+    end
 end
 
 input = File.readlines(ARGV[0], chomp: true)
-cpu = CPU.new
-crt = CRT.new
-crt = Solver.solve(input, cpu, crt)
-puts cpu.signals.reduce(:+)
-puts crt.screen.each_slice(40).to_a.map(&:join)
+computer = Computer.new
+computer.run(input)
+puts computer.solve_signal
+puts computer.display
