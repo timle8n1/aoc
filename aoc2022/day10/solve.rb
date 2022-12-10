@@ -39,7 +39,7 @@ class CRT
     def draw_pixel(cpu)
         screen_offset = cpu.cycle - 1
         cursor = screen_offset - (SCREEN_WIDTH * (screen_offset / SCREEN_WIDTH))
-        pixel = (cursor - cpu.x).abs < 2 ? "#" : "."
+        pixel = (cursor - cpu.x).abs < 2 ? "█" : " "
         screen.append(pixel)
     end
 end
