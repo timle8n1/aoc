@@ -9,10 +9,9 @@ class SandSim
     end
 
     def drop
-        grain = [1, source[1]]
+        grain = source
 
         while true
-            #puts "grain:#{grain.join(",")}"
             down = [grain[0] + 1, grain[1]]
             left = [grain[0] + 1, grain[1] - 1]
             right = [grain[0] + 1, grain[1] + 1]
@@ -35,6 +34,9 @@ class SandSim
                         next
                     end
                 else 
+                    return nil
+                end
+                if grain == source
                     return nil
                 end
                 return grain
@@ -65,14 +67,19 @@ class Parser
         end
     end
 
-    def to_map
+    def to_map(has_floor)
         rows = @max_y + 1
         columns = @max_x - @min_x + 1
+        column_offset = 0
+        if has_floor
+            columns += rows * 2
+            column_offset = rows
+        end
         art = Array.new(rows) { Array.new(columns) {"."} }
         @rocks.each do |rock|
             pp = nil
             rock.each do |p|
-                art[p[0]][p[1] - @min_x] = "#"
+                art[p[0]][p[1] - @min_x + column_offset] = "#"
                 if pp != nil
                     start_x = (p[1] < pp[1] ? p[1] : pp[1]) - @min_x
                     end_x = (p[1] > pp[1] ? p[1] : pp[1]) - @min_x
@@ -81,12 +88,16 @@ class Parser
             
                     for x in start_x..end_x
                         for y in start_y..end_y
-                            art[y][x] = "#"
+                            art[y][x + column_offset] = "#"
                         end
                     end
                 end
                 pp = p
             end
+        end
+        if has_floor
+            art << Array.new(columns) {"."} 
+            art << Array.new(columns) {"#"} 
         end
         return art
     end
@@ -96,9 +107,9 @@ input = File.readlines(ARGV[0], chomp: true)
 parser = Parser.new
 parser.parse(input)
 
-source = [0, 500 - parser.min_x]
+source = [0, 500 - parser.min_x + parser.max_y + 1]
 
-map = parser.to_map
+map = parser.to_map(true)
 map[source[0]][source[1]] = "+"
 
 sim = SandSim.new(map, source)
@@ -108,15 +119,10 @@ while !grain.nil?
     grain = sim.drop
 end
 
-map.each do |row|
-    puts row.join
-end
-
-
 sand = 0
 map.each do |row|
     row.each do |p|
         sand +=1 if p == "O"
     end
 end
-puts sand
+puts sand + 1
