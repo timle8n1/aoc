@@ -34,6 +34,10 @@ class ItemGenerator
         @current_item = 0
     end
 
+    def current_item_index
+        @current_item % @item_count
+    end
+
     def next_item
         item_index = @current_item % @item_count
         @current_item += 1
@@ -163,6 +167,31 @@ class Cave
         end
     end
 
+    def top_terrain
+        tops = Array.new(7) { nil }
+        min = 9_999_999_999
+        @tower.reverse.each_with_index do |t, index|
+            height_index = @tower.length - index
+            t.each_with_index do |c, width_index|
+                next unless tops[width_index].nil?
+                if c 
+                    tops[width_index] = height_index
+                    if height_index < min
+                        min = height_index
+                    end
+                end
+            end
+            break if tops.all?
+        end
+        tops.each_with_index { |t, index| 
+            if t == nil
+                tops[index] = 0
+                min = 0
+            end
+        }
+        tops.map { |t| t - min }
+    end
+
     def to_s
         l = ""
         @tower.reverse.each do |t| 
@@ -189,6 +218,8 @@ class RockParser
     end
 end
 
+Key = Struct.new(:terrain, :rock_index, :jet_index)    
+
 rocks_input = File.readlines("rocks.txt", chomp: true)
 rocks = RockParser.new.parse(rocks_input)
 rock_generator = ItemGenerator.new(rocks)
@@ -197,13 +228,31 @@ rock_generator = ItemGenerator.new(rocks)
 jets = File.readlines(ARGV[0], chomp: true)[0].split("")
 jet_generator = ItemGenerator.new(jets)
 
+loop_detection = {}
+loop_height = 0
+loop_count = 0
+loop_remainder = 0
+sum_height = 0
+
 cave = Cave.new(7, rock_generator, jet_generator)
-ARGV[1].to_i.times do |index|
-    if index % 10000 == 0
-        puts "dropping #{index}"
-    end
+drop_count = ARGV[1].to_i
+drop_count.times do |index|
     cave.drop
+    key = Key.new(cave.top_terrain, rock_generator.current_item_index, jet_generator.current_item_index)
+    memo = loop_detection[key]
+    if memo
+        start_index, start_height = memo
+        loop_height = cave.tower_height - start_height
+        loop_length = index - start_index
+        loop_count = (drop_count - start_index - 1) / loop_length
+        loop_remainder = (drop_count - start_index - 1) % loop_length
+
+        loop_remainder.times do
+            cave.drop
+        end
+        
+        puts cave.tower_height + ((loop_count - 1) * loop_height)
+        break
+    end
+    loop_detection[key] = [index, cave.tower_height]
 end
-
-
-puts cave.tower_height
